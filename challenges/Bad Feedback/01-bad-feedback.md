@@ -1,8 +1,6 @@
 # Bad Feedback  
 **Category:** Web Security  
 
-![Bad Feedback Challenge](assets/Bad Feedback Challenge.png)
-
 > A company rolled out a shiny feedback form and insists their customers are completely trustworthy. Every feedback is accepted at face value, no questions asked. What can go wrong?
 
 **Challenge Link:** http://15.206.47.5:5000  
