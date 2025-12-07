@@ -16,10 +16,10 @@ This repository contains my personal approach to solving the challenges from the
 
 | # | Challenge Name | Category | Write-up |
 |---|----------------|----------|----------|
-| 1 | **Bad Feedback** | Web Security | [View](challenges/Bad%20Feedback/01-bad-feedback.md) |
-| 2 | **Triangle** | Web Security | [View](challenges/Triangle/02-triangle.md) |
-| 3 | **Ticket** | Application Security | [View](challenges/Ticket/03-ticket.md) |
-| 4 | **Nitro** | Scripting / Automation | [View](challenges/Nitro/04-nitro.md) |
+| 1 | **Bad Feedback** | Web Security | [View](challenges/Bad%20Feedback/README.md) |
+| 2 | **Triangle** | Web Security | [View](challenges/Triangle/README.md) |
+| 3 | **Ticket** | Application Security | [View](challenges/Ticket/README.md) |
+| 4 | **Nitro** | Scripting / Automation | [View](challenges/Nitro/README.md) |
 
 > 📁 Each challenge has its own dedicated markdown file with a full technical breakdown.
 
