@@ -18,10 +18,16 @@ This repository contains my personal approach to solving the challenges from the
 |---|----------------|----------|----------|
 | 1 | **Bad Feedback** | Web Security | [View](challenges/01-bad-feedback.md) |
 | 2 | **Triangle** | Web Security | [View](challenges/02-triangle.md) |
-| 3 | **Ticket** | Application Security | [View](challenges/03-ticket.md) |
-| 4 | **Nitro** | Scripting / Automation | [View](challenges/04-nitro.md) |
+| 3 | **Ticket** | Web Security | [View](challenges/03-ticket.md) |
+| 4 | **Nitro** | Scripting  | [View](challenges/04-nitro.md) |
 
 > 📁 Each challenge has its own dedicated markdown file with a full technical breakdown.
+
+---
+
+## 🏆 Scoreboard
+
+![CTF Scoreboard](scoreboard.png)
 
 ---
 
