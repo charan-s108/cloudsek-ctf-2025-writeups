@@ -1,4 +1,5 @@
 # 🐛 Bad Feedback  
+
 **Category:** Web Security  
 
 > A company rolled out a shiny feedback form and insists their customers are completely trustworthy. Every feedback is accepted at face value, no questions asked. What can go wrong?
