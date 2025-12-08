@@ -142,6 +142,8 @@ Once the forged **admin JWT token** was injected:
 * The protected admin endpoint became accessible
 * The **flag was immediately revealed in the admin response**
 
+![flag](./assets/ticket-flag.png)
+
 This confirmed a **complete authentication and authorization bypass**.
 
 ---
